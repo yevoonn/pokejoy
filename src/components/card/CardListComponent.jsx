@@ -7,8 +7,7 @@ const CardListComponent = ({ cards = [] }) => {
             container
             spacing={2}
             sx={{
-                flexGrow: 1,
-                justifyContent: 'center'
+                flexGrow: 1
             }}>
             {cards.map((card) => (
                 <Grid xs={12} sm={6} md={4} lg={3} key={card.name}>

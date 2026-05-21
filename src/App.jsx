@@ -3,12 +3,19 @@ import { CssVarsProvider } from '@mui/joy/styles';
 import { CssBaseline, Typography } from '@mui/joy';
 import Sheet from '@mui/joy/Sheet';
 import CardListComponent from './components/card/CardListComponent';
+import Button from '@mui/joy/Button';
+import CircularProgress from '@mui/joy/CircularProgress';
+import Sync from '@mui/icons-material/Sync';
+import Box from '@mui/joy/Box';
 
 function App() {
-	const [pokemonData, setPokemonData] = useState([]);
+	const [isLoading, setIsLoading] = useState(false);
+	const [pokemonData, setPokemonData] = useState({});
+	const [offset, setOffset] = useState(0);
+	const limit = 10;
 
-	useEffect(() => {
-		fetch('https://pokeapi.co/api/v2/pokemon?limit=12')
+	const fetchPokemonData = (currentOffset) => {
+		return fetch(`https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${currentOffset}`)
 			.then(response => response.json())
 			.then(async data => {
 				const pokemonList = await Promise.all(
@@ -17,6 +24,7 @@ function App() {
 						const pokemonDetails = await response.json();
 
 						return {
+							id: pokemonDetails?.id,
 							name: pokemonDetails?.name,
 							types: pokemonDetails?.types.map(
 								typeInfo => typeInfo.type.name
@@ -27,14 +35,26 @@ function App() {
 					})
 				);
 
-				setPokemonData(pokemonList);
+				const newData = pokemonList.reduce((acc, p) => ({ ...acc, [p.id]: p }), {});
+				setPokemonData(prev => ({ ...prev, ...newData }));
 			})
 			.catch(error => {
 				console.error('Error fetching Pokémon data:', error);
 			});
+	};
+
+	useEffect(() => {
+		fetchPokemonData(0);
 	}, []);
 
-	return !pokemonData.length ?
+	const handleLoadMore = () => {
+		setIsLoading(true);
+		const newOffset = offset + limit;
+		setOffset(newOffset);
+		fetchPokemonData(newOffset).finally(() => setIsLoading(false));
+	};
+
+	return !Object.keys(pokemonData).length ?
 		<Typography level="h1" sx={{ mb: 4, textAlign: "center" }}>
 			Loading...
 		</Typography>
@@ -46,7 +66,18 @@ function App() {
 					<Typography level="h1" sx={{ mb: 4, textAlign: "center" }}>
 						PokeJoy
 					</Typography>
-					<CardListComponent cards={pokemonData} />
+					<CardListComponent cards={Object.values(pokemonData)} />
+					<Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+						<Button 
+							onClick={handleLoadMore}
+							startDecorator={isLoading ? <CircularProgress size="sm" /> : <Sync />}
+							sx={{
+								"--Button-gap": "8px"
+							}}
+						>
+							{isLoading ? 'Loading...' : 'Load more'}
+						</Button>
+					</Box>
 				</Sheet>
 			</CssVarsProvider>
 		)
