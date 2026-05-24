@@ -1,19 +1,13 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
-import { ApolloProvider } from "@apollo/client/react";
-import App from "./App.jsx";
+import ApolloAppProvider from "./app/providers/ApolloAppProvider.jsx";
+import App from "./app/App.jsx";
 import "@fontsource/inter";
-
-const client = new ApolloClient({
-  link: new HttpLink({ uri: "https://graphql.pokeapi.co/v1beta2" }),
-  cache: new InMemoryCache(),
-});
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <ApolloProvider client={client}>
+    <ApolloAppProvider>
       <App />
-    </ApolloProvider>
+    </ApolloAppProvider>
   </StrictMode>,
 );
